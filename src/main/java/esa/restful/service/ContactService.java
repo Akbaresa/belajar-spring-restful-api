@@ -6,7 +6,10 @@ import esa.restful.model.ContactResponse;
 import esa.restful.model.CreateContactRequest;
 import esa.restful.repository.ContactRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
 
@@ -39,4 +42,22 @@ public class ContactService {
                 .phone(contact.getPhone())
                 .build();
     }
+
+    private ContactResponse toContactResponse(Contact contact){
+        return ContactResponse.builder()
+                .id(contact.getId())
+                .firstName(contact.getFirstame())
+                .lastName(contact.getLastName())
+                .email(contact.getEmail())
+                .phone(contact.getPhone())
+                .build();
+    }
+    @Transactional(readOnly = true)
+    public ContactResponse get(User user , String id){
+        Contact contact = contactRepository.findFirstByUserAndId(user , id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND , "contact not found"
+                ));
+        return toContactResponse(contact);
+    };
 }

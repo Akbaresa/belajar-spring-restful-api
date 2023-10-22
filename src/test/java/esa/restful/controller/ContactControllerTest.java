@@ -2,6 +2,7 @@ package esa.restful.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import esa.restful.entity.Contact;
 import esa.restful.entity.User;
 import esa.restful.model.ContactResponse;
 import esa.restful.model.CreateContactRequest;
@@ -19,7 +20,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import javax.print.attribute.standard.Media;
 
+import java.util.UUID;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -105,4 +109,56 @@ class ContactControllerTest {
 
         });
     }
+
+    @Test
+    void getContactNotFound()throws Exception{
+
+        mockMvc.perform(
+                get("/api/contacts/1212")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-API-TOKEN" , "token")
+        ).andExpectAll(
+                status().isNotFound()
+        ).andDo(result -> {
+            WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<WebResponse<String>>() {
+            });
+            assertNotNull(response.getErrors());
+        });
+    }
+
+    @Test
+    void getContactSuccess()throws Exception{
+        User user = userRepository.findById("esa").orElseThrow();
+
+        Contact contact = new Contact();
+        contact.setId(UUID.randomUUID().toString());
+        contact.setUser(user);
+        contact.setFirstame("Maulana");
+        contact.setLastName("Akbar");
+        contact.setEmail("esa@example.com");
+        contact.setPhone("0858");
+        contactRepository.save(contact);
+
+
+        mockMvc.perform(
+                get("/api/contacts/" + contact.getId())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-API-TOKEN" , "token")
+        ).andExpectAll(
+                status().isOk()
+        ).andDo(result -> {
+            WebResponse<ContactResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+            assertNull(response.getErrors());
+
+            assertEquals(contact.getId() , response.getData().getId());
+            assertEquals(contact.getFirstame() , response.getData().getFirstName());
+            assertEquals(contact.getLastName() , response.getData().getLastName());
+            assertEquals(contact.getEmail() , response.getData().getEmail());
+            assertEquals(contact.getPhone() , response.getData().getPhone());
+        });
+    }
+
 }
