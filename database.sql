@@ -30,6 +30,7 @@ use belajar_spring_restful_api;
 --    foreign key fk_contacts_addresses (contact_id) references contacts (id)
 --)engine InnoDB;
 select * from users;
+truncate users;
 select * from contacts;
 select * from addresses;
 

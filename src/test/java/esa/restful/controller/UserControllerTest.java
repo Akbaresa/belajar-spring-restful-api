@@ -7,6 +7,7 @@ import esa.restful.model.RegisterUserRequest;
 import esa.restful.model.UpdateUserRequest;
 import esa.restful.model.UserResponse;
 import esa.restful.model.WebResponse;
+import esa.restful.repository.ContactRepository;
 import esa.restful.repository.UserRepository;
 import esa.restful.security.BCrypt;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,8 +38,12 @@ class UserControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ContactRepository contactRepository;
+
     @BeforeEach
     void setUp(){
+        contactRepository.deleteAll();
         userRepository.deleteAll();
     }
 
