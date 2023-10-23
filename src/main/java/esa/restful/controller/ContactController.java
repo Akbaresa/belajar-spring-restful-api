@@ -1,16 +1,15 @@
 package esa.restful.controller;
 
 import esa.restful.entity.User;
-import esa.restful.model.ContactResponse;
-import esa.restful.model.CreateContactRequest;
-import esa.restful.model.UpdateContactRequest;
-import esa.restful.model.WebResponse;
+import esa.restful.model.*;
 import esa.restful.service.ContactService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Path;
+import java.util.List;
 
 @RestController
 public class ContactController {
@@ -65,6 +64,36 @@ public class ContactController {
 
         return WebResponse.<String>builder()
                 .data("ok")
+                .build();
+    }
+
+    @GetMapping(
+            path = "/api/contacts",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public WebResponse<List<ContactResponse>> search( User user ,
+                                                      @RequestParam(value = "name" , required = false) String name ,
+                                                      @RequestParam(value = "email" , required = false) String email ,
+                                                      @RequestParam(value = "phone" , required = false) String phone ,
+                                                      @RequestParam(value = "page" , required = false , defaultValue = "0") Integer page ,
+                                                      @RequestParam(value = "size" , required = false , defaultValue = "10") Integer size
+    ){
+        SearchContactRequest request = SearchContactRequest.builder()
+                .page(page)
+                .size(size)
+                .name(name)
+                .email(email)
+                .phone(phone)
+                .build();
+
+        Page<ContactResponse> contactResponse = contactService.search(user, request);
+        return WebResponse.<List<ContactResponse>>builder()
+                .data(contactResponse.getContent())
+                .paging(PagingResponse.builder()
+                        .currentPage(contactResponse.getNumber())
+                        .totalPage(contactResponse.getTotalPages())
+                        .size(contactResponse.getSize())
+                        .build())
                 .build();
     }
 }
